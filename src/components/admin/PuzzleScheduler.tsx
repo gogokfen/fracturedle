@@ -1,7 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { ChevronLeft, ChevronRight, Edit3, Check, X, Loader2, Trash2 } from 'lucide-react';
-import { cn, formatDate } from '@/lib/utils';
+import { cn, formatDate, getTodayString } from '@/lib/utils';
 import { usePuzzles } from '@/hooks/usePuzzles';
 import type { Puzzle, PuzzleState, DifficultyMode } from '@/types';
 
@@ -23,7 +23,10 @@ interface EditState {
 
 export default function PuzzleScheduler() {
   const { puzzles, loading, reload } = usePuzzles();
-  const [currentMonth, setCurrentMonth] = useState(new Date(2026, 3, 1));
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    const [y, m] = getTodayString().split('-').map(Number);
+    return new Date(y, m - 1, 1);
+  });
   const [editing, setEditing] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -125,7 +128,7 @@ export default function PuzzleScheduler() {
             const day = i + 1;
             const dateStr = `${year}-${String(month + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
             const puzzle  = puzzlesByDate[dateStr];
-            const isToday = dateStr === new Date().toISOString().split('T')[0];
+            const isToday = dateStr === getTodayString();
             return (
               <div
                 key={day}
