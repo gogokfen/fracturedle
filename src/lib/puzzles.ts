@@ -1,5 +1,6 @@
 import type { Puzzle } from '@/types';
 import fallback from '@/data/puzzles.json';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { isSupabaseConfigured, createClient, dbToPuzzle, puzzleToDb, type DbPuzzle } from './db';
 import { getTodayString } from './utils';
 
@@ -73,13 +74,14 @@ export async function getPuzzleById(id: string): Promise<Puzzle | null> {
   return dbToPuzzle(data as DbPuzzle);
 }
 
-// Admin operations — use service role key
+// Admin operations — use service role key (bypasses RLS)
 function adminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!url || !key) throw new Error('Supabase service role key not set');
-  const { createClient: create } = require('@supabase/supabase-js');
-  return create(url, key);
+  const url = (process.env.NEXT_PUBLIC_SUPABASE_URL ?? '').trim();
+  const key = (process.env.SUPABASE_SERVICE_ROLE_KEY ?? '').trim();
+  if (!url || !key) throw new Error('SUPABASE_SERVICE_ROLE_KEY is not configured in environment variables');
+  return createSupabaseClient(url, key, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
 }
 
 export async function upsertPuzzle(puzzle: Puzzle): Promise<Puzzle> {
