@@ -1,60 +1,73 @@
-import { NextRequest } from 'next/server';
-import { createHmac, timingSafeEqual } from 'crypto';
+// Uses Web Crypto API only — compatible with Edge Runtime (middleware) and Node.js (API routes)
 
-const COOKIE_NAME = 'fracturedle_admin';
+export const COOKIE_NAME = 'fracturedle_admin';
 const MAX_AGE = 60 * 60 * 24 * 7; // 7 days
 
 function getSecret(): string {
   const s = process.env.ADMIN_SESSION_SECRET;
-  if (!s) throw new Error('ADMIN_SESSION_SECRET env var not set');
+  if (!s) throw new Error('ADMIN_SESSION_SECRET not set');
   return s;
 }
 
 function getAdminPassword(): string {
   const p = process.env.ADMIN_PASSWORD;
-  if (!p) throw new Error('ADMIN_PASSWORD env var not set');
+  if (!p) throw new Error('ADMIN_PASSWORD not set');
   return p;
 }
 
-function sign(value: string): string {
-  return createHmac('sha256', getSecret()).update(value).digest('hex');
+async function hmacKey(secret: string): Promise<CryptoKey> {
+  const raw = new TextEncoder().encode(secret);
+  return crypto.subtle.importKey('raw', raw, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
 }
 
-export function createSessionToken(): string {
+async function hmacSign(secret: string, payload: string): Promise<ArrayBuffer> {
+  const key = await hmacKey(secret);
+  return crypto.subtle.sign('HMAC', key, new TextEncoder().encode(payload));
+}
+
+function toHex(buf: ArrayBuffer): string {
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+function constantTimeEqual(a: Uint8Array, b: Uint8Array): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
+  return diff === 0;
+}
+
+export async function createSessionToken(): Promise<string> {
   const payload = `admin:${Date.now()}`;
-  const sig = sign(payload);
-  return Buffer.from(`${payload}.${sig}`).toString('base64url');
+  const sig = await hmacSign(getSecret(), payload);
+  return btoa(`${payload}.${toHex(sig)}`).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-export function verifyToken(token: string): boolean {
+export async function verifyToken(token: string): Promise<boolean> {
   try {
-    const decoded = Buffer.from(token, 'base64url').toString();
+    const decoded = atob(token.replace(/-/g, '+').replace(/_/g, '/'));
     const lastDot = decoded.lastIndexOf('.');
     const payload = decoded.slice(0, lastDot);
-    const sig = decoded.slice(lastDot + 1);
-    const expected = sign(payload);
-    return timingSafeEqual(Buffer.from(sig), Buffer.from(expected));
+    const sigHex = decoded.slice(lastDot + 1);
+    const expected = await hmacSign(getSecret(), payload);
+    const expectedBytes = new Uint8Array(expected);
+    const actualBytes = new Uint8Array(sigHex.match(/.{2}/g)!.map(h => parseInt(h, 16)));
+    return constantTimeEqual(expectedBytes, actualBytes);
   } catch {
     return false;
   }
 }
 
-export function checkPassword(candidate: string): boolean {
+export async function checkPassword(candidate: string): Promise<boolean> {
   try {
-    const expected = getAdminPassword();
-    return timingSafeEqual(
-      Buffer.from(candidate),
-      Buffer.from(expected),
-    );
+    const secret = getSecret();
+    const [hashA, hashB] = await Promise.all([
+      hmacSign(secret, candidate),
+      hmacSign(secret, getAdminPassword()),
+    ]);
+    return constantTimeEqual(new Uint8Array(hashA), new Uint8Array(hashB));
   } catch {
     return false;
   }
-}
-
-export function verifyAdminSession(req: NextRequest): boolean {
-  const token = req.cookies.get(COOKIE_NAME)?.value;
-  if (!token) return false;
-  return verifyToken(token);
 }
 
 export function makeSessionCookie(token: string): string {
@@ -66,5 +79,3 @@ export function makeSessionCookie(token: string): string {
 export function clearSessionCookie(): string {
   return `${COOKIE_NAME}=; HttpOnly; SameSite=Lax; Path=/; Max-Age=0`;
 }
-
-export { COOKIE_NAME };

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { generateAndCacheArtwork } from '@/lib/artwork';
 import { updatePuzzleArtwork } from '@/lib/puzzles';
-import { verifyAdminSession } from '@/lib/auth';
+import { verifyToken, COOKIE_NAME } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
-  if (!verifyAdminSession(req)) {
+  const token = req.cookies.get(COOKIE_NAME)?.value;
+  if (!token || !(await verifyToken(token))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

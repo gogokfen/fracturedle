@@ -39,6 +39,6 @@ create policy "Public read artwork" on storage.objects
   for select using (bucket_id = 'card-artwork');
 
 create policy "Service role upload artwork" on storage.objects
-  for insert using (bucket_id = 'card-artwork' and auth.role() = 'service_role');
+  for insert with check (bucket_id = 'card-artwork' and auth.role() = 'service_role');
 
 -- Seed data from the existing puzzles (paste your puzzle rows here or import via Supabase dashboard)

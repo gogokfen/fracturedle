@@ -3,12 +3,11 @@ import { checkPassword, createSessionToken, makeSessionCookie, clearSessionCooki
 
 export async function POST(req: NextRequest) {
   const { password } = await req.json();
-  if (!password || !checkPassword(password)) {
-    // Delay to slow brute force
-    await new Promise(r => setTimeout(r, 500));
+  if (!password || !(await checkPassword(password))) {
+    await new Promise(r => setTimeout(r, 500)); // slow brute force
     return NextResponse.json({ error: 'Invalid password' }, { status: 401 });
   }
-  const token = createSessionToken();
+  const token = await createSessionToken();
   const res = NextResponse.json({ ok: true });
   res.headers.set('Set-Cookie', makeSessionCookie(token));
   return res;
