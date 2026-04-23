@@ -2,14 +2,16 @@ import type { FakeCard, RealCard, GuessResult, CardColor } from '@/types';
 import { cmcDiff } from './utils';
 
 function colorOverlap(a: CardColor[], b: CardColor[]): number {
-  const setA = new Set(a);
-  const intersection = b.filter(c => setA.has(c)).length;
-  const union = new Set([...a, ...b]).size;
+  const safeA = a ?? [];
+  const safeB = b ?? [];
+  const setA = new Set(safeA);
+  const intersection = safeB.filter(c => setA.has(c)).length;
+  const union = new Set([...safeA, ...safeB]).size;
   return union === 0 ? 1 : intersection / union;
 }
 
 function typeOverlap(realType: string, guessType: string): number {
-  const extract = (t: string) => t.split(/[\s—–-]+/).map(s => s.toLowerCase().trim());
+  const extract = (t: string) => (t ?? '').split(/[\s—–-]+/).map(s => s.toLowerCase().trim());
   const a = new Set(extract(realType));
   const b = new Set(extract(guessType));
   const intersection = [...b].filter(w => a.has(w)).length;
@@ -32,8 +34,8 @@ function keywordOverlap(realText: string, guessText: string): number {
   const extract = (text: string) => new Set(
     mtgKeywords.filter(kw => text.toLowerCase().includes(kw))
   );
-  const a = extract(realText);
-  const b = extract(guessText);
+  const a = extract(realText ?? '');
+  const b = extract(guessText ?? '');
   if (a.size === 0 && b.size === 0) return 0.5;
   const intersection = [...b].filter(kw => a.has(kw)).length;
   const union = new Set([...a, ...b]).size;
@@ -46,15 +48,19 @@ export function computeFractureScore(
   guessedCard: RealCard,
 ): number {
   // Compare guessedCard against realCard
-  const colorScore = colorOverlap(realCard.colorIdentity as CardColor[], guessedCard.colorIdentity as CardColor[]) * 25;
+  const colorScore = colorOverlap(
+    (realCard.colorIdentity ?? []) as CardColor[],
+    (guessedCard.colorIdentity ?? []) as CardColor[],
+  ) * 25;
   const cmcScore = (() => {
+    if (realCard.cmc == null) return 0;
     const diff = cmcDiff(realCard.cmc, guessedCard.cmc);
     if (diff === 'exact') return 25;
     if (diff === 'close') return 12;
     return 0;
   })();
-  const typeScore = typeOverlap(realCard.type, guessedCard.type) * 25;
-  const keywordScore = keywordOverlap(realCard.oracleText, guessedCard.oracleText) * 25;
+  const typeScore = typeOverlap(realCard.type ?? '', guessedCard.type ?? '') * 25;
+  const keywordScore = keywordOverlap(realCard.oracleText ?? '', guessedCard.oracleText ?? '') * 25;
   return Math.round(colorScore + cmcScore + typeScore + keywordScore);
 }
 
@@ -67,12 +73,12 @@ export function buildGuessResult(
   guessedCard: RealCard,
 ): GuessResult {
   const colorOverlapVal = colorOverlap(
-    realCard.colorIdentity as CardColor[],
-    guessedCard.colorIdentity as CardColor[],
+    (realCard.colorIdentity ?? []) as CardColor[],
+    (guessedCard.colorIdentity ?? []) as CardColor[],
   );
-  const cmcMatchVal = cmcDiff(realCard.cmc, guessedCard.cmc);
-  const typeOverlapVal = typeOverlap(realCard.type, guessedCard.type);
-  const kwOverlapVal = keywordOverlap(realCard.oracleText, guessedCard.oracleText);
+  const cmcMatchVal = realCard.cmc != null ? cmcDiff(realCard.cmc, guessedCard.cmc) : 'far';
+  const typeOverlapVal = typeOverlap(realCard.type ?? '', guessedCard.type ?? '');
+  const kwOverlapVal = keywordOverlap(realCard.oracleText ?? '', guessedCard.oracleText ?? '');
 
   return {
     guessName,

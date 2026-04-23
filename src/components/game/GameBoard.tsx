@@ -29,16 +29,16 @@ export default function GameBoard({ puzzle }: GameBoardProps) {
 
   useEffect(() => { initGame(puzzle); }, [puzzle, initGame]);
 
-  // Load real card when game is complete
+  // Load real card at puzzle init so fracture scores are accurate during gameplay
   useEffect(() => {
-    if (!game?.isComplete || realCard) return;
+    setRealCard(null);
     setIsLoadingReal(true);
     fetch(`/api/scryfall/card?name=${encodeURIComponent(puzzle.realCardName)}`)
       .then(r => r.json())
       .then(d => { if (d.card) setRealCard(d.card); })
       .catch(() => {})
       .finally(() => setIsLoadingReal(false));
-  }, [game?.isComplete, puzzle.realCardName, realCard]);
+  }, [puzzle.realCardName]);
 
   const handleGuess = useCallback(async (name: string) => {
     if (!game || game.isComplete) return;
@@ -54,12 +54,13 @@ export default function GameBoard({ puzzle }: GameBoardProps) {
       const isCorrect = guessedCard.name.toLowerCase() === puzzle.realCardName.toLowerCase();
       const hintIndex = game.guesses.length;
       const hint = puzzle.hints[hintIndex] ?? '';
+      const realCardForScore = realCard ?? ({ name: puzzle.realCardName } as RealCard);
       const result = buildGuessResult(
         guessedCard.name,
         isCorrect,
         hint,
         game.fakeCard,
-        { name: puzzle.realCardName } as RealCard, // lightweight; fracture uses full card via API
+        realCardForScore,
         guessedCard,
       );
       submitGuess(guessedCard.name, result);
@@ -67,7 +68,7 @@ export default function GameBoard({ puzzle }: GameBoardProps) {
     } catch {
       setError('Failed to look up card. Try again.');
     }
-  }, [game, puzzle, submitGuess]);
+  }, [game, puzzle, realCard, submitGuess]);
 
   if (!game) return <LoadingState />;
 
