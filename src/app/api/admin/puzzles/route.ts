@@ -23,7 +23,15 @@ export async function POST(req: NextRequest) {
     const saved = await upsertPuzzle(puzzle);
     return NextResponse.json({ puzzle: saved });
   } catch (err) {
-    return NextResponse.json({ error: String(err) }, { status: 500 });
+    const msg = err instanceof Error ? err.message : String(err);
+    // Postgres unique constraint violation
+    if (msg.includes('puzzles_date_key') || msg.includes('unique constraint')) {
+      return NextResponse.json(
+        { error: `A puzzle is already scheduled for that date. Choose a different date or edit the existing one.` },
+        { status: 409 },
+      );
+    }
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
 

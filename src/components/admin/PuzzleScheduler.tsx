@@ -53,6 +53,13 @@ export default function PuzzleScheduler() {
     const puzzle = puzzles.find(p => p.id === editing.puzzleId);
     if (!puzzle) return;
 
+    // Client-side date conflict check
+    const conflict = puzzles.find(p => p.date === editing.date && p.id !== editing.puzzleId);
+    if (conflict) {
+      setSaveError(`"${conflict.fakeCard.name}" is already on ${editing.date}. Pick a different date.`);
+      return;
+    }
+
     setSaving(true);
     setSaveError(null);
     try {

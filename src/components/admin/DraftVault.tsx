@@ -61,6 +61,11 @@ export default function DraftVault() {
 
   const handleSchedule = async () => {
     if (!scheduling || !scheduleDate) return;
+    const conflict = puzzles.find(p => p.date === scheduleDate && p.id !== scheduling.id);
+    if (conflict) {
+      setActionError(`"${conflict.fakeCard.name}" is already on ${scheduleDate}. Pick a different date.`);
+      return;
+    }
     setActionLoading(scheduling.id + ':schedule');
     setActionError(null);
     try {
