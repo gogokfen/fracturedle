@@ -71,7 +71,8 @@ export function formatDate(dateStr: string): string {
 }
 
 export function getTodayString(): string {
-  return new Date().toISOString().split('T')[0];
+  // Always use Israel timezone so the puzzle resets at midnight Israel time (IDT/IST)
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jerusalem' }).format(new Date());
 }
 
 export function puzzleNumberFromDate(dateStr: string): number {

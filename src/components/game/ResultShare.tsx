@@ -1,10 +1,31 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Copy, Check, Share2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { shareEmojiGrid, formatDate } from '@/lib/utils';
 import type { GameState } from '@/types';
+
+function secondsUntilIsraelMidnight(): number {
+  const now = new Date();
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Asia/Jerusalem',
+    hour: '2-digit', minute: '2-digit', second: '2-digit',
+    hour12: false,
+  });
+  const parts = fmt.formatToParts(now);
+  const h = parseInt(parts.find(p => p.type === 'hour')!.value);
+  const m = parseInt(parts.find(p => p.type === 'minute')!.value);
+  const s = parseInt(parts.find(p => p.type === 'second')!.value);
+  return 86400 - (h * 3600 + m * 60 + s);
+}
+
+function formatCountdown(secs: number): string {
+  const h = Math.floor(secs / 3600);
+  const m = Math.floor((secs % 3600) / 60);
+  const s = secs % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+}
 
 interface ResultShareProps {
   game: GameState;
@@ -13,6 +34,12 @@ interface ResultShareProps {
 
 export default function ResultShare({ game, onClose }: ResultShareProps) {
   const [copied, setCopied] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(secondsUntilIsraelMidnight);
+
+  useEffect(() => {
+    const id = setInterval(() => setSecondsLeft(secondsUntilIsraelMidnight()), 1000);
+    return () => clearInterval(id);
+  }, []);
 
   const emojiGrid = game.guesses.map(g => ({
     isCorrect: g.isCorrect,
@@ -108,6 +135,15 @@ export default function ResultShare({ game, onClose }: ResultShareProps) {
             Share
           </button>
         )}
+      </div>
+
+      {/* Next puzzle countdown */}
+      <div className="py-3 px-4 rounded-xl border border-white/10 bg-white/5 space-y-0.5">
+        <p className="text-xs text-white/40 uppercase tracking-wider">Next puzzle</p>
+        <p className="text-3xl font-mono font-black text-white tracking-tight">
+          {formatCountdown(secondsLeft)}
+        </p>
+        <p className="text-xs text-white/25">Resets at midnight Israel time</p>
       </div>
 
       {onClose && (
