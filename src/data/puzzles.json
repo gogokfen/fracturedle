@@ -1,0 +1,170 @@
+[
+  {
+    "id": "puzzle_001",
+    "number": 1,
+    "date": "2026-04-23",
+    "difficulty": "easy",
+    "state": "published",
+    "realCardName": "Counterspell",
+    "realCardScryfallId": "8ac972b5-9f6a-4aec-b8a5-f8b8b9db235d",
+    "fakeCard": {
+      "id": "fake_001",
+      "name": "Echospell",
+      "manaCost": "{2}{R}{R}",
+      "cmc": 4,
+      "colors": ["R"],
+      "colorIdentity": ["R"],
+      "type": "Instant",
+      "oracleText": "Copy target spell. You may choose new targets for the copy.",
+      "flavorText": "\"What's yours is also mine,\" the imitator smirked.",
+      "rarity": "uncommon",
+      "frameColor": ["R"],
+      "artworkPrompt": "A red-robed mage copying a spell from a magical mirror, fire swirling around twin magical effects"
+    },
+    "hints": [
+      "The real card has exactly 2 colored mana symbols.",
+      "The real card is blue.",
+      "The real card is an Instant.",
+      "The real card prevents something from happening.",
+      "The real card is from Alpha/Beta and has been reprinted many times."
+    ],
+    "tags": ["classic", "iconic"],
+    "createdAt": "2026-04-01T00:00:00Z",
+    "publishedAt": "2026-04-23T00:00:00Z",
+    "curatorNotes": "Classic card, great intro puzzle. Echospell is the exact opposite of Counterspell."
+  },
+  {
+    "id": "puzzle_002",
+    "number": 2,
+    "date": "2026-04-24",
+    "difficulty": "easy",
+    "state": "published",
+    "realCardName": "Lightning Bolt",
+    "realCardScryfallId": "e3285e6b-3e79-4d7c-bf96-d920f973b122",
+    "fakeCard": {
+      "id": "fake_002",
+      "name": "Healing Pulse",
+      "manaCost": "{W}",
+      "cmc": 1,
+      "colors": ["W"],
+      "colorIdentity": ["W"],
+      "type": "Instant",
+      "oracleText": "Target creature or player gains 3 life.",
+      "flavorText": "A gentle warmth where once there was burning pain.",
+      "rarity": "common",
+      "frameColor": ["W"],
+      "artworkPrompt": "A white-robed healer sending a beam of gentle golden light at a grateful warrior"
+    },
+    "hints": [
+      "The real card deals damage.",
+      "The real card targets any target.",
+      "The real card costs only {R}.",
+      "The real card deals exactly 3 damage.",
+      "The real card is arguably the most efficient damage spell ever printed."
+    ],
+    "tags": ["classic", "burn"],
+    "createdAt": "2026-04-01T00:00:00Z",
+    "publishedAt": "2026-04-24T00:00:00Z",
+    "curatorNotes": "Opposite of Lightning Bolt: instead of 3 damage for R, it's 3 life for W."
+  },
+  {
+    "id": "puzzle_003",
+    "number": 3,
+    "date": "2026-04-25",
+    "difficulty": "hard",
+    "state": "published",
+    "realCardName": "Dark Ritual",
+    "realCardScryfallId": "4a9c0cfd-5c89-4a13-9ea3-b290c4a5d24c",
+    "fakeCard": {
+      "id": "fake_003",
+      "name": "Light Penance",
+      "manaCost": "{W}{W}{W}",
+      "cmc": 3,
+      "colors": ["W"],
+      "colorIdentity": ["W"],
+      "type": "Sorcery",
+      "oracleText": "Remove {W}{W}{W} from the mana pool. You lose 2 life.",
+      "flavorText": "Sacrifice is the price of purity.",
+      "rarity": "common",
+      "frameColor": ["W"],
+      "artworkPrompt": "A white cleric kneeling in submission, three bright motes of light leaving their hands"
+    },
+    "hints": [
+      "The real card adds mana to your mana pool.",
+      "The real card is black.",
+      "The real card is a Sorcery... wait, actually an Instant.",
+      "The real card adds {B}{B}{B} for {B}.",
+      "The real card is a staple of Legacy and Vintage combo decks."
+    ],
+    "tags": ["classic", "ramp"],
+    "createdAt": "2026-04-01T00:00:00Z",
+    "publishedAt": "2026-04-25T00:00:00Z",
+    "curatorNotes": "Dark Ritual inverted: instead of gaining BBB for B, you spend WWW and lose 2 life."
+  },
+  {
+    "id": "puzzle_004",
+    "number": 4,
+    "date": "2026-04-26",
+    "difficulty": "easy",
+    "state": "scheduled",
+    "realCardName": "Swords to Plowshares",
+    "realCardScryfallId": "46b0a5c2-ac85-448e-9697-0e3d05ba6cca",
+    "fakeCard": {
+      "id": "fake_004",
+      "name": "Plowshares to Swords",
+      "manaCost": "{B}",
+      "cmc": 1,
+      "colors": ["B"],
+      "colorIdentity": ["B"],
+      "type": "Instant",
+      "oracleText": "Put a creature card from target player's graveyard onto the battlefield under your control. That player gains life equal to its power.",
+      "flavorText": "The harvest yields warriors.",
+      "rarity": "uncommon",
+      "frameColor": ["B"],
+      "artworkPrompt": "A dark necromancer raising a skeletal warrior from farmland, plowshares transforming into swords"
+    },
+    "hints": [
+      "The real card removes a creature from the battlefield.",
+      "The real card is white.",
+      "The real card gives the opponent a benefit.",
+      "The real card exiles the creature.",
+      "The real card gives the opponent life equal to its power."
+    ],
+    "tags": ["removal", "classic"],
+    "createdAt": "2026-04-02T00:00:00Z",
+    "curatorNotes": "Perfect inversion of StP."
+  },
+  {
+    "id": "puzzle_005",
+    "number": 5,
+    "date": "2026-04-27",
+    "difficulty": "hard",
+    "state": "draft",
+    "realCardName": "Black Lotus",
+    "realCardScryfallId": "bd8fa327-dd41-4737-8f19-2cf5eb1f7cdd",
+    "fakeCard": {
+      "id": "fake_005",
+      "name": "White Weed",
+      "manaCost": "{1}",
+      "cmc": 1,
+      "colors": [],
+      "colorIdentity": [],
+      "type": "Artifact",
+      "oracleText": "{T}: Remove three mana of any one color from your mana pool.",
+      "flavorText": "It takes as quickly as the lotus gives.",
+      "rarity": "common",
+      "frameColor": [],
+      "artworkPrompt": "A wilted grey flower draining magical energy from a mage's hands"
+    },
+    "hints": [
+      "The real card adds mana.",
+      "The real card is free to cast.",
+      "The real card adds three mana of any color.",
+      "The real card is sacrificed to use.",
+      "The real card is the most valuable Magic card ever printed."
+    ],
+    "tags": ["power9", "iconic"],
+    "createdAt": "2026-04-03T00:00:00Z",
+    "curatorNotes": "Ultimate hard puzzle. White Weed costs mana and removes mana instead."
+  }
+]

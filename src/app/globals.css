@@ -1,26 +1,109 @@
 @import "tailwindcss";
 
+/* ── Theme CSS variables ── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-primary: #0a0a14;
+  --bg-secondary: #111120;
+  --bg-card: rgba(255,255,255,0.04);
+  --text-primary: #f0f0ff;
+  --text-muted: rgba(240,240,255,0.4);
+  --accent: #3b82f6;
+  --border: rgba(255,255,255,0.08);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* MTG Color themes */
+[data-theme="white"] {
+  --bg-primary: #f5f0e8;
+  --bg-secondary: #e8e0d0;
+  --bg-card: rgba(0,0,0,0.04);
+  --text-primary: #1a1208;
+  --text-muted: rgba(26,18,8,0.5);
+  --accent: #c8a530;
+  --border: rgba(0,0,0,0.12);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+[data-theme="blue"] {
+  --bg-primary: #040e1c;
+  --bg-secondary: #071525;
+  --bg-card: rgba(59,130,246,0.08);
+  --text-primary: #d0e8ff;
+  --text-muted: rgba(208,232,255,0.4);
+  --accent: #60a5fa;
+  --border: rgba(59,130,246,0.15);
 }
+
+[data-theme="black"] {
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #111111;
+  --bg-card: rgba(255,255,255,0.03);
+  --text-primary: #c8c8c8;
+  --text-muted: rgba(200,200,200,0.35);
+  --accent: #a855f7;
+  --border: rgba(255,255,255,0.06);
+}
+
+[data-theme="red"] {
+  --bg-primary: #140505;
+  --bg-secondary: #1c0808;
+  --bg-card: rgba(239,68,68,0.08);
+  --text-primary: #ffe0d0;
+  --text-muted: rgba(255,224,208,0.4);
+  --accent: #f87171;
+  --border: rgba(239,68,68,0.15);
+}
+
+[data-theme="green"] {
+  --bg-primary: #041008;
+  --bg-secondary: #061810;
+  --bg-card: rgba(34,197,94,0.08);
+  --text-primary: #d0f0d8;
+  --text-muted: rgba(208,240,216,0.4);
+  --accent: #4ade80;
+  --border: rgba(34,197,94,0.15);
+}
+
+/* ── Base styles ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: system-ui, -apple-system, sans-serif;
+  min-height: 100dvh;
+  transition: background-color 0.3s ease, color 0.3s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* ── MTG card font ── */
+.font-serif { font-family: "Palatino Linotype", Palatino, Georgia, serif; }
+
+/* ── Selection ── */
+::selection { background: rgba(59,130,246,0.3); }
+
+/* ── Focus ring ── */
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ── Animations ── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.05) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ── Mobile bottom nav spacing ── */
+@media (max-width: 768px) {
+  .pb-nav { padding-bottom: 4.5rem; }
 }
