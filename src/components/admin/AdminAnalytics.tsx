@@ -1,101 +1,184 @@
 'use client';
-import { BarChart2, Users, Target, TrendingUp, Clock } from 'lucide-react';
-import puzzlesData from '@/data/puzzles.json';
-import type { Puzzle } from '@/types';
+import { BarChart2, Archive, Clock, CheckCircle, CalendarDays, Loader2 } from 'lucide-react';
+import { usePuzzles } from '@/hooks/usePuzzles';
+import { formatDate } from '@/lib/utils';
+import { cn } from '@/lib/utils';
 
-// Mock analytics data — in production this would come from a database
-const MOCK_ANALYTICS = [
-  { puzzleNumber: 1, date: '2026-04-23', players: 1247, solveRate: 78, avgGuesses: 2.9, dropRate: 8 },
-  { puzzleNumber: 2, date: '2026-04-24', players: 1183, solveRate: 84, avgGuesses: 2.4, dropRate: 5 },
-  { puzzleNumber: 3, date: '2026-04-25', players: 1098, solveRate: 61, avgGuesses: 3.8, dropRate: 12 },
-];
+const STATE_STYLES: Record<string, string> = {
+  published: 'text-green-300',
+  scheduled: 'text-blue-300',
+  draft:     'text-gray-400',
+};
 
 export default function AdminAnalytics() {
-  const puzzles = puzzlesData as Puzzle[];
-  const publishedCount = puzzles.filter(p => p.state === 'published').length;
-  const scheduledCount = puzzles.filter(p => p.state === 'scheduled').length;
-  const draftCount = puzzles.filter(p => p.state === 'draft').length;
+  const { puzzles, loading, error } = usePuzzles();
 
-  const totalPlayers = MOCK_ANALYTICS.reduce((s, a) => s + a.players, 0);
-  const avgSolveRate = MOCK_ANALYTICS.length > 0
-    ? Math.round(MOCK_ANALYTICS.reduce((s, a) => s + a.solveRate, 0) / MOCK_ANALYTICS.length)
-    : 0;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-40 text-white/30 text-sm gap-2">
+        <Loader2 className="w-4 h-4 animate-spin" />Loading analytics…
+      </div>
+    );
+  }
+
+  if (error) {
+    return <div className="text-red-400 text-sm p-4">{error}</div>;
+  }
+
+  const published  = puzzles.filter(p => p.state === 'published');
+  const scheduled  = puzzles.filter(p => p.state === 'scheduled');
+  const drafts     = puzzles.filter(p => p.state === 'draft');
+  const easyCount  = puzzles.filter(p => p.difficulty === 'easy').length;
+  const hardCount  = puzzles.filter(p => p.difficulty === 'hard').length;
+
+  // Next scheduled date
+  const nextScheduled = scheduled
+    .sort((a, b) => a.date.localeCompare(b.date))[0];
+
+  // Latest published
+  const latestPublished = published
+    .sort((a, b) => b.date.localeCompare(a.date))[0];
 
   return (
     <div className="space-y-6">
-      <h2 className="text-base font-bold text-white">Analytics Overview</h2>
+      <h2 className="text-base font-bold text-white">Analytics</h2>
 
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <SummaryCard icon={<Users className="w-5 h-5 text-blue-400" />} value={totalPlayers.toLocaleString()} label="Total Players" />
-        <SummaryCard icon={<Target className="w-5 h-5 text-green-400" />} value={`${avgSolveRate}%`} label="Avg Solve Rate" />
-        <SummaryCard icon={<BarChart2 className="w-5 h-5 text-purple-400" />} value={publishedCount} label="Published" />
-        <SummaryCard icon={<Clock className="w-5 h-5 text-amber-400" />} value={scheduledCount + draftCount} label="In Queue" />
+      {/* State summary */}
+      <div className="grid grid-cols-3 gap-3">
+        <SummaryCard
+          icon={<CheckCircle className="w-5 h-5 text-green-400" />}
+          value={published.length}
+          label="Published"
+          color="green"
+        />
+        <SummaryCard
+          icon={<CalendarDays className="w-5 h-5 text-blue-400" />}
+          value={scheduled.length}
+          label="Scheduled"
+          color="blue"
+        />
+        <SummaryCard
+          icon={<Archive className="w-5 h-5 text-gray-400" />}
+          value={drafts.length}
+          label="Drafts"
+          color="gray"
+        />
       </div>
 
-      {/* Per-puzzle table */}
+      {/* Difficulty split */}
+      <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-3">
+        <h3 className="text-xs font-semibold text-white/60 uppercase tracking-wider">Difficulty Split</h3>
+        <div className="flex items-center gap-3">
+          <div className="flex-1">
+            <div className="flex justify-between text-xs mb-1">
+              <span className="text-white/60">Easy</span>
+              <span className="text-white">{easyCount}</span>
+            </div>
+            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-green-500 rounded-full transition-all"
+                style={{ width: puzzles.length ? `${(easyCount / puzzles.length) * 100}%` : '0%' }}
+              />
+            </div>
+          </div>
+          <div className="flex-1">
+            <div className="flex justify-between text-xs mb-1">
+              <span className="text-white/60">Hard</span>
+              <span className="text-white">{hardCount}</span>
+            </div>
+            <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-red-500 rounded-full transition-all"
+                style={{ width: puzzles.length ? `${(hardCount / puzzles.length) * 100}%` : '0%' }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Key dates */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-1">
+          <div className="text-xs text-white/40 uppercase tracking-wider">Latest Published</div>
+          {latestPublished ? (
+            <>
+              <div className="text-white font-semibold">{latestPublished.fakeCard.name}</div>
+              <div className="text-white/40 text-xs">{formatDate(latestPublished.date)} · #{latestPublished.number}</div>
+            </>
+          ) : (
+            <div className="text-white/30 text-sm">None yet</div>
+          )}
+        </div>
+        <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-1">
+          <div className="text-xs text-white/40 uppercase tracking-wider">Next Up</div>
+          {nextScheduled ? (
+            <>
+              <div className="text-white font-semibold">{nextScheduled.fakeCard.name}</div>
+              <div className="text-white/40 text-xs">{formatDate(nextScheduled.date)} · #{nextScheduled.number}</div>
+            </>
+          ) : (
+            <div className="text-white/30 text-sm">Nothing scheduled</div>
+          )}
+        </div>
+      </div>
+
+      {/* Puzzle list */}
       <div>
-        <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-3">Per Puzzle</h3>
+        <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-3">
+          All Puzzles ({puzzles.length})
+        </h3>
         <div className="rounded-2xl border border-white/10 overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-white/5">
                 <th className="text-left px-4 py-3 text-white/40 text-xs font-medium uppercase">#</th>
+                <th className="text-left px-4 py-3 text-white/40 text-xs font-medium uppercase">Fake Card</th>
+                <th className="text-left px-4 py-3 text-white/40 text-xs font-medium uppercase hidden sm:table-cell">Real Card</th>
                 <th className="text-left px-4 py-3 text-white/40 text-xs font-medium uppercase">Date</th>
-                <th className="text-right px-4 py-3 text-white/40 text-xs font-medium uppercase">Players</th>
-                <th className="text-right px-4 py-3 text-white/40 text-xs font-medium uppercase">Solve %</th>
-                <th className="text-right px-4 py-3 text-white/40 text-xs font-medium uppercase hidden sm:table-cell">Avg Guesses</th>
-                <th className="text-right px-4 py-3 text-white/40 text-xs font-medium uppercase hidden sm:table-cell">Drop %</th>
+                <th className="text-left px-4 py-3 text-white/40 text-xs font-medium uppercase">State</th>
               </tr>
             </thead>
             <tbody>
-              {MOCK_ANALYTICS.map((row, i) => (
-                <tr key={row.puzzleNumber} className="border-t border-white/5 hover:bg-white/[0.03]">
-                  <td className="px-4 py-3 text-white/60 font-mono">#{row.puzzleNumber}</td>
-                  <td className="px-4 py-3 text-white/60">{row.date}</td>
-                  <td className="px-4 py-3 text-right text-white">{row.players.toLocaleString()}</td>
-                  <td className="px-4 py-3 text-right">
-                    <span className={row.solveRate >= 70 ? 'text-green-400' : row.solveRate >= 50 ? 'text-yellow-400' : 'text-red-400'}>
-                      {row.solveRate}%
+              {puzzles.map(p => (
+                <tr key={p.id} className="border-t border-white/5 hover:bg-white/[0.03]">
+                  <td className="px-4 py-3 text-white/60 font-mono">#{p.number}</td>
+                  <td className="px-4 py-3 text-white font-medium truncate max-w-[120px]">{p.fakeCard.name}</td>
+                  <td className="px-4 py-3 text-white/50 hidden sm:table-cell">{p.realCardName}</td>
+                  <td className="px-4 py-3 text-white/50">{p.date}</td>
+                  <td className="px-4 py-3">
+                    <span className={cn('text-xs font-medium capitalize', STATE_STYLES[p.state] ?? 'text-white/40')}>
+                      {p.state}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-right text-white/60 hidden sm:table-cell">{row.avgGuesses}</td>
-                  <td className="px-4 py-3 text-right text-white/40 hidden sm:table-cell">{row.dropRate}%</td>
                 </tr>
               ))}
             </tbody>
           </table>
+          {puzzles.length === 0 && (
+            <div className="text-center py-8 text-white/30 text-sm">No puzzles yet.</div>
+          )}
         </div>
       </div>
 
-      {/* Guess distribution summary */}
-      <div>
-        <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-3">Puzzle States</h3>
-        <div className="flex gap-3">
-          {[
-            { label: 'Published', count: publishedCount, color: 'bg-green-500' },
-            { label: 'Scheduled', count: scheduledCount, color: 'bg-blue-500' },
-            { label: 'Draft', count: draftCount, color: 'bg-gray-500' },
-          ].map(item => (
-            <div key={item.label} className="flex-1 p-4 rounded-xl border border-white/10 bg-white/5 text-center">
-              <div className={`w-2.5 h-2.5 rounded-full mx-auto mb-2 ${item.color}`} />
-              <div className="text-xl font-black text-white">{item.count}</div>
-              <div className="text-xs text-white/40">{item.label}</div>
-            </div>
-          ))}
-        </div>
+      {/* Player tracking note */}
+      <div className="p-4 rounded-xl border border-dashed border-white/10 text-center space-y-1">
+        <BarChart2 className="w-5 h-5 text-white/20 mx-auto" />
+        <p className="text-xs text-white/30">Player analytics (solve rates, guess counts) require a game_plays tracking table in Supabase.</p>
+        <p className="text-xs text-white/20">Add a <code className="text-white/40">game_plays</code> table to enable live player stats.</p>
       </div>
-
-      <p className="text-xs text-white/20 text-center">
-        Analytics are mocked. Connect to a real database (Supabase/Firebase) to see live data.
-      </p>
     </div>
   );
 }
 
-function SummaryCard({ icon, value, label }: { icon: React.ReactNode; value: string | number; label: string }) {
+function SummaryCard({ icon, value, label, color }: {
+  icon: React.ReactNode;
+  value: number;
+  label: string;
+  color: 'green' | 'blue' | 'gray';
+}) {
+  const border = { green: 'border-green-500/20', blue: 'border-blue-500/20', gray: 'border-white/10' }[color];
   return (
-    <div className="p-4 rounded-xl border border-white/10 bg-white/5 space-y-1">
+    <div className={cn('p-4 rounded-xl border bg-white/5 space-y-1', border)}>
       <div className="text-white/40">{icon}</div>
       <div className="text-2xl font-black text-white">{value}</div>
       <div className="text-xs text-white/40">{label}</div>

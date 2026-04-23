@@ -89,7 +89,7 @@ export async function upsertPuzzle(puzzle: Puzzle): Promise<Puzzle> {
     .upsert(row)
     .select()
     .single();
-  if (error) throw error;
+  if (error) throw new Error((error as { message?: string })?.message ?? JSON.stringify(error));
   return dbToPuzzle(data as DbPuzzle);
 }
 
@@ -98,21 +98,15 @@ export async function deletePuzzle(id: string): Promise<void> {
     .from('puzzles')
     .delete()
     .eq('id', id);
-  if (error) throw error;
+  if (error) throw new Error((error as { message?: string })?.message ?? JSON.stringify(error));
 }
 
 export async function updatePuzzleArtwork(id: string, artworkUrl: string): Promise<void> {
-  const { error } = await adminClient()
-    .from('puzzles')
-    .update({ fake_card: adminClient().rpc('jsonb_set_artwork', { id, url: artworkUrl }) })
-    .eq('id', id);
-
-  // Fallback: fetch + patch the fake_card jsonb
-  if (error) {
-    const { data } = await adminClient().from('puzzles').select('fake_card').eq('id', id).single();
-    if (data) {
-      const fakeCard = { ...(data.fake_card as Record<string, unknown>), artworkUrl };
-      await adminClient().from('puzzles').update({ fake_card: fakeCard }).eq('id', id);
-    }
-  }
+  const client = adminClient();
+  const { data, error: fetchError } = await client
+    .from('puzzles').select('fake_card').eq('id', id).single();
+  if (fetchError) throw new Error((fetchError as { message?: string })?.message ?? 'Fetch failed');
+  const fakeCard = { ...(data.fake_card as Record<string, unknown>), artworkUrl };
+  const { error } = await client.from('puzzles').update({ fake_card: fakeCard }).eq('id', id);
+  if (error) throw new Error((error as { message?: string })?.message ?? JSON.stringify(error));
 }
